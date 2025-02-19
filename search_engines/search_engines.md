@@ -1,6 +1,3 @@
----
-sidebar_position: 2
----
 # Search Engine
 advanced hybrid search system combining BM25 ranking, semantic embeddings, and proximity-based scoring for sophisticated document retrieval.
 

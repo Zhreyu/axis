@@ -1,6 +1,3 @@
----
-sidebar_position: 4
----
 # Sentiment
 framework combining aspect-based analysis, domain-specific modifiers, and contextual understanding for nuanced emotion detection.
 

@@ -1,6 +1,4 @@
----
-sidebar_position: 6
----
+
 # Summarization
 
 super-fast text summarization framework combining multiple transformer architectures and adaptive chunk processing for sophisticated document summarization.

@@ -1,6 +1,3 @@
----
-sidebar_position: 4
----
 # SRSWTI Ultimate
 
 search and ranking system integrating neural embeddings, graph-based document relationships, and hybrid scoring for advanced document retrieval.

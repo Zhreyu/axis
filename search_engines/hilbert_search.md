@@ -1,6 +1,3 @@
----
-sidebar_position: 3
----
 # Hilbert Search
 sota learning-to-rank system combining pointwise, pairwise, and listwise approaches  for intelligent document ranking.
 
