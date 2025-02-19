@@ -1,32 +1,61 @@
+# The Future Isn't Centralized, It's Personalized
 
-srswti-axis (AI eXplainable Inference & Search) is a comprehensive python library for advanced data retrieval and interpretable AI solutions. it provides a collection of powerful components and state-of-the-art capabilities that run entirely locally on your machine. we focused on efficient implementations that deliver high performance even on modest hardware.
+srswti-axis (AI eXplainable Inference & Search) is an industry-ready machine learning library for advanced data retrieval and interpretable AI solutions. it provides a collection of powerful components and state-of-the-art capabilities that run entirely locally on your machine. we focused on efficient implementations that deliver high performance even on modest hardware.
 
+For complete documentation, visit [docs.srswti.com](https://docs.srswti.com). Visit [srswti.com](https://www.srswti.com) for our products, and check out our blog to learn more about our mission and the mathematical foundations behind our work.
 
+## Key Features
+- Local intelligence—too cheap to meter, firewall-protected for privacy, on-premise steerable, and rendering benchmarks obsolete
+- Everything what LLMs do but much faster, averaging 50-100ms latency 
+- Industry-ready
+- Zero-shot classification <70ms latency
+- Advanced text cleaning and preprocessing
+- Intelligent text analysis and NER
+- Document clustering and ranking
+- Neural-probabilistic hybrid search
+- Multi-strategy document merging
+- Multilingual translation support
+- Sentiment analysis
 
+# Installation
 
-for complete documentation, visit [docs.srswti.com](https://docs.srswti.com)
-for more information about our products and company, visit [www.srswti.com](https://www.srswti.com)
+## Requirements
+- Python 3.9 - 3.11
 
+## Setting up Virtual Environment
 
-## key features
-- local intelligence—too cheap to meter, firewall-protected for privacy, on-premise steerable, and rendering benchmarks obsolete
-- everything what llms do but much faster, averaging 50-100ms latency
-- made for gpu-poor people
-- zero-shot classification <70ms latency
-- advanced text cleaning and preprocessing
-- intelligent text analysis and ner
-- document clustering and ranking
-- neural-probabilistic hybrid search
-- multi-strategy document merging
-- multilingual translation support
-- sentiment analysis
+Create a new virtual environment using uv:
+```bash
+uv venv --python 3.9
+```
 
-## Installation
+Activate the virtual environment:
+
+For Unix/macOS:
+```bash
+source .venv/bin/activate
+```
+
+For Windows:
+```bash
+.venv\Scripts\activate
+```
+
+## Installing the Package
+
+Using uv:
+```bash
+uv pip install srswti-axis
+```
+
+Or using traditional pip:
 ```bash
 pip install srswti-axis
 ```
 
-### install required misc dependencies
+## Install Required Dependencies
+
+Inside activated virtual environment:
 ```bash
-python -m srswti_axis.post_install
+srswti-axis-post-install
 ```
