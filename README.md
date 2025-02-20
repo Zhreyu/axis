@@ -2,7 +2,7 @@
 
 srswti-axis (AI eXplainable Inference & Search) is an industry-ready machine learning library for advanced data retrieval and interpretable AI solutions. it provides a collection of powerful components and state-of-the-art capabilities that run entirely locally on your machine. we focused on efficient implementations that deliver high performance even on modest hardware.
 
-For complete documentation, visit [docs.srswti.com](https://docs.srswti.com). Visit [srswti.com](https://www.srswti.com) for our products, and check out our blog to learn more about our mission and the mathematical foundations behind our work.
+For complete documentation, visit [docs.srswti.com](https://docs.srswti.com). Visit [srswti.com](https://www.srswti.com) for our products, and check out our [blog](https://www.srswti.com/blogs)blog to learn more about our mission and the mathematical foundations behind our work.
 
 ## Key Features
 - Local intelligence—too cheap to meter, firewall-protected for privacy, on-premise steerable, and rendering benchmarks obsolete
