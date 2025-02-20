@@ -59,9 +59,10 @@ Inside activated virtual environment:
 ```bash
 srswti-axis-post-install
 ```
+this command takes a little time at first depending on your hardware. 
 
 # Notebooks Usage
 
 > Note: We will be updating the notebooks section in the coming days to provide plug-and-play examples for using SRSWTI Axis. Check back soon for comprehensive Jupyter notebooks demonstrating the full capabilities of the framework.
 
-Stay tuned for updates!
+**We are optimizing our frameworks every day. Please email us at team@srswti.com or raise an issue here, and we will typically respond in less than an hour!**  
