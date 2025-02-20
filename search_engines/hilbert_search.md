@@ -1,407 +1,194 @@
-# Hilbert Search
-sota learning-to-rank system combining pointwise, pairwise, and listwise approaches  for intelligent document ranking.
 
-## overview
-enables intelligent document ranking through neural architectures and multi-dimensional feature analysis.
+# SRSWTI Hilbert Search
 
-## theoretical foundations
+Learning-to-rank system implementing pointwise, pairwise, and listwise ranking approaches.
 
-### hilbert space embedding
-embedding projection:
-$\phi(x) = \langle x, \cdot \rangle_{\mathcal{H}}$
+## Quick Start
 
-where:
-- $\mathcal{H}$: reproducing kernel hilbert space (rkhs)
-- $x$: input document/query
-- $\phi$: feature mapping function
-
-kernel computation:
-$k(x, y) = \langle \phi(x), \phi(y) \rangle_{\mathcal{H}}$
-
-### ranking architectures
-
-#### pointwise approach
-loss function:
-$L_{point} = \sum_{i=1}^n (f(x_i) - y_i)^2$
-
-where:
-- $f(x_i)$: predicted score
-- $y_i$: true relevance
-- $n$: number of documents
-
-#### pairwise approach (ranknet)
-probability estimation:
-$P_{ij} = \frac{1}{1 + e^{-\sigma(s_i - s_j)}}$
-
-loss computation:
-$L_{pair} = -\sum_{(i,j) \in P} \bar{P_{ij}}\log(P_{ij})$
-
-where:
-- $s_i, s_j$: document scores
-- $\sigma$: scaling factor
-- $P$: preference pairs
-- $\bar{P_{ij}}$: ground truth probability
-
-#### listwise approach (listnet)
-permutation probability:
-$P_s(y|\phi) = \frac{\exp(\phi^Ty)}{\sum_{y' \in \Omega}\exp(\phi^Ty')}$
-
-loss formulation:
-$L_{list} = -\sum_{y \in \Omega} P_s(y|\phi)\log(P_s(y|\psi))$
-
-## implementation features
-
-### feature extraction
 ```python
-def extract_features(self, query: str, documents: List[str]) -> np.ndarray:
-    features = []
-    # tf-idf features
-    tfidf_matrix = self.tfidf.fit_transform(documents)
-    query_tfidf = self.tfidf.transform([query])
-    tfidf_scores = (query_tfidf @ tfidf_matrix.T).toarray()[0]
-    
-    # semantic features
-    query_embedding = self.embedder.encode([query])[0]
-    doc_embeddings = self.embedder.encode(documents)
-    semantic_scores = np.inner(query_embedding, doc_embeddings)
-    
-    # combine features...
-    return self.scaler.fit_transform(features)
-```
+from srswti_axis import SRSWTIHilbertSearch
 
-### neural architectures
-
-#### pointwise ranker
-network structure:
-```python
-self.model = nn.Sequential(
-    nn.Linear(input_dim, 64),
-    nn.ReLU(),
-    nn.Dropout(0.2),
-    nn.Linear(64, 32),
-    nn.ReLU(),
-    nn.Linear(32, 1),
-    nn.Sigmoid()
-)
-```
-
-optimization properties:
-- mse loss
-- adam optimizer
-- dropout regularization
-- batch normalization, lol
-
-#### pairwise ranker
-scoring mechanism:
-```python
-def forward(self, x1, x2):
-    score1 = self.model(x1)
-    score2 = self.model(x2)
-    return torch.sigmoid(score1 - score2)
-```
-
-### advanced features
-
-#### document representation
-feature components:
-1. semantic embeddings
-2. tf-idf vectors
-3. structural features
-4. positional encoding
-
-#### adaptive weighting
-score computation:
-$S_{final} = \alpha S_{point} + \beta S_{pair} + \gamma S_{list}$
-where:
-- $\alpha, \beta, \gamma$: learned weights
-- subject to: $\alpha + \beta + \gamma = 1$
-
-## example usage
-
-### basic ranking
-```python
+# Initialize ranker
 ranker = SRSWTIHilbertSearch(approach='pointwise')
-ranker.train(queries, documents, relevance_scores)
 
-# rank new documents
-results = ranker.rank_documents(
-    query="machine learning",
-    documents=docs
-)
-```
-
-### advanced configuration
-```python
-# custom training setup
-ranker = SRSWTIHilbertSearch(
-    approach='listwise',
+# Train the model
+ranker.train(
+    queries=queries,
+    documents=documents,
+    relevance_scores=relevance_scores,
     epochs=100
 )
 
-results = ranker.train(
+# Rank new documents
+results = ranker.rank_documents(query, documents)
+```
+
+## Core Components
+
+### Feature Extraction
+
+The system uses a FeatureExtractor class that combines multiple feature types:
+
+```python
+class FeatureExtractor:
+    def __init__(self, embedding_model: str = 'srswti-neural-embedder-v1'):
+        # Model mapping
+        model_mapping = {
+            'srswti-neural-embedder-v1': 'all-mpnet-base-v2'
+        }
+        actual_model = model_mapping.get(embedding_model, embedding_model)
+        self.embedder = SentenceTransformer(actual_model)
+        self.tfidf = TfidfVectorizer()
+        self.scaler = StandardScaler()
+```
+
+Features extracted include:
+- TF-IDF similarity
+- Semantic similarity
+- Document length
+- Relative document length
+
+### Ranking Models
+
+#### 1. Pointwise Ranker
+```python
+class PointwiseRanker(nn.Module):
+    def __init__(self, input_dim: int):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(input_dim, 64),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(32, 1),
+            nn.Sigmoid()
+        )
+```
+
+#### 2. Pairwise Ranker
+```python
+class PairwiseRanker(nn.Module):
+    def __init__(self, input_dim: int):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(input_dim, 64),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 1)
+        )
+```
+
+#### 3. Listwise Ranker
+```python
+class ListwiseRanker(nn.Module):
+    def __init__(self, input_dim: int):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(input_dim, 64),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 1)
+        )
+```
+
+## Training Methods
+
+### Training Parameters
+```python
+def train(self, 
+         queries: List[str],
+         documents: List[List[str]],
+         relevance_scores: List[List[float]],
+         epochs: int = 100):
+```
+
+### Training Examples
+
+```python
+# Training data structure
+training_queries = [
+    {
+        "query": "machine learning artificial intelligence",
+        "relevance": [0.95, 0.3, 0.8, 0.4, 0.1, 0.1, 0.1]
+    },
+    {
+        "query": "sports physical training",
+        "relevance": [0.2, 0.1, 0.2, 0.1, 0.8, 0.9, 0.85]
+    }
+]
+
+# Prepare training data
+train_queries = [q["query"] for q in training_queries]
+train_docs = [documents] * len(training_queries)
+relevance_scores = [q["relevance"] for q in training_queries]
+
+# Train model
+ranker.train(
     queries=train_queries,
     documents=train_docs,
-    relevance_scores=scores
+    relevance_scores=relevance_scores,
+    epochs=50
 )
 ```
 
-## performance metrics
+## Document Ranking
 
-### ranking quality
-benchmark scores:
-- ndcg@10: 0.89
-- map: 0.92
-- mrr: 0.87
-- precision@5: 0.85
-
-### training efficiency
-processing speeds:
-- pointwise: less than  200ms/batch
-- pairwise: less than  350ms/batch
-- listwise: less than  500ms/batch
-
-## practical applications
-
-### document ranking
-use cases:
-- search systems
-- content recommendation
-- document retrieval
-- relevance scoring
-
-### ranking optimization
-capabilities:
-- preference learning 
-- relevance prediction
-- rank aggregation
-- adaptive scoring
-
-
-
-## future development
-
-### planned features
-1. advanced architectures:
-   - transformer encoders
-   - attention mechanisms
-   - cross-encoders
-   - graph neural networks
-
-2. optimization techniques:
-   - curriculum learning
-   - knowledge distillation
-   - contrastive learning
-   - efficient training, lol
-
-3. enhanced features:
-   - cross-lingual ranking
-   - dynamic pooling
-   - contextual embeddings
-   - adaptive sampling
-
-## conclusion
-srswti hilbert search system provides comprehensive learning-to-rank capabilities through advanced neural architectures and hilbert space transformations. its multi-approach design enables flexible and powerful document ranking across diverse applications.
-
-future improvements:
-- self-supervised pretraining
-- zero-shot ranking
-- efficient inference
-- distributed training
-
-
-
-# srswti advanced pagerank & semantic search
-
-## overview
-revolutionary document ranking system combining enhanced pagerank algorithms with semantic embeddings. surpasses traditional pagerank by integrating deep semantic understanding and dynamic graph structures for superior relevance scoring.
-
-## theoretical foundations
-
-### enhanced pagerank framework
-core formula:
-$PR(d_i) = (1-\alpha)\sum_{j \in M(i)} \frac{PR(d_j)}{|C(j)|} + \alpha E(d_i)$
-
-where:
-- $PR(d_i)$: pagerank score for document i
-- $M(i)$: set of documents linking to i
-- $C(j)$: number of outbound links from j
-- $\alpha$: damping factor
-- $E(d_i)$: semantic importance factor
-
-### semantic graph construction
-edge weight computation:
-$w_{ij} = \lambda S_{cos}(d_i, d_j) + (1-\lambda)S_{sem}(d_i, d_j)$
-
-where:
-- $S_{cos}$: cosine similarity
-- $S_{sem}$: semantic similarity
-- $\lambda$: balance parameter
-- subject to: $w_{ij} \geq threshold$
-
-### hybrid scoring system
-final score calculation:
-$Score_{final} = \alpha PR(d) + (1-\alpha)Sim(q,d)$
-
-scoring properties:
-- dynamic weighting
-- context-aware
-- query-specific
-- topology-sensitive
-
-## implementation features
-
-### graph construction
 ```python
-def build_document_graph(self, 
-                        documents: List[str],
-                        threshold: float = 0.5) -> nx.DiGraph:
-    # get embeddings
-    self.doc_embeddings = self.embedder.encode(documents)
-    
-    # calculate similarities
-    similarity_matrix = cosine_similarity(self.doc_embeddings)
-    
-    # create graph
-    G = nx.DiGraph()
-    
-    # add edges based on threshold
-    for i in range(len(documents)):
-        for j in range(len(documents)):
-            if i != j and similarity_matrix[i][j] > threshold:
-                G.add_edge(i, j, weight=similarity_matrix[i][j])
-    
-    return G
+def rank_documents(self, query: str, documents: List[str]) -> List[Tuple[int, float]]:
+    """
+    Returns: List of tuples containing (document_index, score)
+    """
 ```
 
-### advanced ranking
+### Evaluation Example
 ```python
-def rank_documents(self, 
-                  query: str, 
-                  documents: List[str],
-                  combine_method: str = 'weighted_sum',
-                  alpha: float = 0.3) -> List[Tuple[int, float]]:
-    # calculate scores using enhanced pagerank
-    query_embedding = self.embedder.encode([query])[0]
-    similarities = cosine_similarity([query_embedding], self.doc_embeddings)[0]
+def evaluate_ranking(ranker, query: str, documents: List[str], 
+                    expected_top_k: List[int] = None) -> Dict:
+    results = ranker.rank_documents(query, documents)
     
-    # combine with pagerank
-    final_scores = alpha * np.array(list(self.pagerank_scores.values())) + \
-                  (1 - alpha) * similarities
+    # Get ranked document indices and scores
+    ranked_indices = [idx for idx, _ in results]
+    scores = [score for _, score in results]
     
-    return [(idx, final_scores[idx]) for idx in ranked_indices]
-```
-
-### unique features
-
-#### semantic enhancement
-computation steps:
-1. transformer embeddings
-2. similarity matrix
-3. graph construction
-4. score propagation
-5. relevance fusion, can be done from the training dataset
-
-#### clustering integration
-document organization:
-```python
-def get_document_clusters(self) -> Dict[int, List[int]]:
-    return {
-        idx: list(component)
-        for idx, component in enumerate(
-            nx.connected_components(self.document_graph)
-        )
+    metrics = {
+        "query": query,
+        "top_5_docs": [documents[idx] for idx in ranked_indices[:5]],
+        "top_5_scores": [scores[idx] for idx in ranked_indices[:5]]
     }
+    
+    if expected_top_k:
+        correct = len(set(ranked_indices[:3]).intersection(set(expected_top_k)))
+        metrics["precision_at_3"] = correct / 3
+    
+    return metrics
 ```
 
-## example usage
+## Model Architecture Details
 
-### basic search
-```python
-engine = SRSWTISearchEngine()
+### Neural Network Layers
+All models use a similar architecture:
+- Input layer based on feature dimension
+- Hidden layer with 64 units (ReLU activation)
+- Dropout layer (0.2)
+- Hidden layer with 32 units (ReLU activation)
+- Output layer (varies by approach)
 
-# index documents
-engine.index_documents(documents)
+### Model-Specific Details
+- Pointwise: Sigmoid output for single score
+- Pairwise: Score difference with sigmoid
+- Listwise: Softmax over document list
 
-# search with enhanced pagerank
-results = engine.search(
-    query="machine learning",
-    n_results=5,
-    ranking_method='combined'
-)
-```
+## Training Components
 
-### advanced configuration
-```python
-ranker = SRSWTISearchRanker(
-    embedding_model='all-mpnet-base-v2',
-    use_pagerank=True
-)
+Each approach uses specific training components:
+- Pointwise: MSE Loss
+- Pairwise: BCE Loss
+- Listwise: Cross-entropy on probability distributions
 
-results = ranker.rank_documents(
-    query=query,
-    documents=docs,
-    combine_method='weighted_sum',
-    alpha=0.3
-)
-```
-
-## performance metrics
-
-### ranking quality
-benchmark scores:
-- precision@k: 0.95
-- recall@k: 0.92
-- mrr: 0.89
-- ndcg: 0.91
-
-### efficiency
-processing speeds:
-- couldnt eval yet
-
-## practical applications
-
-### document organization
-use cases:
-- search systems
-- content discovery
-- recommendation engines
-- knowledge bases
-
-### ranking optimization
-capabilities:
-- semantic clustering
-- topic modeling
-- relevance scoring
-- query understanding
-
-
-
-## future development
-
-### planned features
-1. graph enhancement:
-   - dynamic thresholding
-   - adaptive weighting
-   - temporal edges
-   - contextual graphs
-
-2. ranking improvements:
-   - personalization
-   - query expansion
-   - click feedback
-   - diversity scoring, lol
-
-3. advanced analysis:
-   - topic extraction
-   - entity linking
-   - cross-document relations
-   - semantic clusters
-
-## conclusion
-srswti advanced pagerank system revolutionizes document ranking through sophisticated graph algorithms and semantic understanding. its enhanced architecture provides superior relevance scoring compared to traditional pagerank implementations.
-
-future improvements:
-- real-time updates
-- distributed graphs
-- multi-modal ranking
-- adaptive scoring
+The optimization is handled by Adam optimizer for all approaches.

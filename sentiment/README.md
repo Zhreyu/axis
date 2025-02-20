@@ -35,78 +35,185 @@ where:
 - $C_i$: context weight
 - $n$: mention count
 
-## implementation features
+## Quick Start
 
-### sentiment extraction
-core analyzer:
 ```python
-def analyze(self, 
-            text: str, 
-            aspects: Optional[List[str]] = None,
-            domain: Optional[str] = None) -> Dict:
-    sentences = sent_tokenize(text)
-    overall_sentiment = self._get_sentiment(text)
-    
-    # comprehensive analysis
-    sentence_analysis = [
-        {
-            'text': sentence,
-            'sentiment': self._get_sentiment(sentence),
-            'intensifiers': self._find_intensifiers(sentence)
-        }
-        for sentence in sentences
-    ]
-    return analysis_results
-```
+from srswti_axis import SRSWTISentimentAnalyzer
 
-### domain modifiers
-customization approach:
-```python
-def add_domain_modifier(self, domain: str, word: str, modifier: float):
-    """dynamic sentiment modification"""
-    if domain not in self.domain_modifiers:
-        self.domain_modifiers[domain] = {}
-    self.domain_modifiers[domain][word] = modifier
-```
-
-### advanced features
-
-#### aspect analysis
-process flow:
-1. text decomposition
-2. aspect identification
-3. context window analysis
-4. modifier extraction
-5. sentiment aggregation, lol
-
-#### scoring mechanism
-component weights:
-```python
-sentiment_components = {
-    'base_sentiment': 0.4,
-    'aspect_score': 0.3,
-    'domain_modifier': 0.2,
-    'intensity': 0.1
-}
-```
-
-## example usage
-
-### basic analysis
-```python
+# Initialize analyzer
 analyzer = SRSWTISentimentAnalyzer()
 
+# Basic analysis
 results = analyzer.analyze(
-    text="The product is amazing!",
-    aspects=['product'],
-    domain='retail'
+    text="Your text here",
+    aspects=["food", "service"],
+    domain="restaurant"
 )
 ```
 
-### custom domain setup
+## Core Components
+
+### Data Structures
+
+#### SRSWTIAspect
 ```python
-# custom modifiers
-modifiers = {
+@dataclass
+class SRSWTIAspect:
+    text: str              # Aspect text
+    sentiment_score: float # Sentiment score
+    context: str          # Surrounding context
+    position: Tuple[int, int]  # Position in text
+    modifiers: List[str]  # Modifying words
+```
+
+#### SRSWTISentiment
+```python
+@dataclass
+class SRSWTISentiment:
+    compound: float    # Combined score
+    positive: float   # Positive score
+    negative: float   # Negative score
+    neutral: float    # Neutral score
+```
+
+### Domain-Specific Modifiers
+
+Default domains and modifiers:
+```python
+domain_modifiers = {
+    'product': {
+        'great': 1.3,
+        'defective': -1.5
+    },
+    'service': {
+        'quick': 1.2,
+        'slow': -1.2
+    },
+    'price': {
+        'worth': 1.4,
+        'expensive': -1.1
+    }
+}
+```
+
+### Adding Custom Modifiers
+
+```python
+# During initialization
+custom_modifiers = {
+    'restaurant': {
+        'delicious': 1.4,
+        'expensive': -1.2,
+        'crowded': -0.5
+    }
+}
+analyzer = SRSWTISentimentAnalyzer(custom_domain_modifiers=custom_modifiers)
+
+# Dynamic addition
+analyzer.add_domain_modifier(
+    domain='restaurant',
+    word='friendly',
+    modifier=1.3
+)
+```
+
+## Analysis Features
+
+### Comprehensive Analysis
+
+```python
+results = analyzer.analyze(
+    text="text to analyze",
+    aspects=["aspect1", "aspect2"],
+    domain="domain_name"
+)
+```
+
+Returns:
+```python
+{
+    'overall': {
+        'sentiment': SRSWTISentiment,
+        'text_stats': {
+            'sentence_count': int,
+            'word_count': int,
+            'avg_sentence_length': float
+        }
+    },
+    'sentences': [
+        {
+            'text': str,
+            'sentiment': SRSWTISentiment,
+            'intensifiers': List[Dict],
+            'length': int
+        }
+    ],
+    'aspects': {
+        'aspect_name': {
+            'mentions': List[SRSWTIAspect]
+        }
+    },
+    'summary': str
+}
+```
+
+### Aspect-Based Analysis
+
+```python
+aspect_analysis = analyzer._analyze_aspects(
+    text="text to analyze",
+    aspects=["aspect1", "aspect2"],
+    domain="domain_name"
+)
+```
+
+Features:
+- Context window analysis
+- Modifier extraction
+- Domain-specific sentiment
+- Position tracking
+
+### Intensifier Detection
+
+```python
+intensifiers = analyzer._find_intensifiers(text)
+```
+
+Returns:
+```python
+[
+    {
+        'intensifier': str,
+        'modified_word': str
+    }
+]
+```
+
+## Example Usage
+
+### Basic Sentiment Analysis
+
+```python
+analyzer = SRSWTISentimentAnalyzer()
+
+text = """The restaurant was incredibly crowded but the food was delicious.
+The staff's friendly demeanor made the experience enjoyable."""
+
+results = analyzer.analyze(
+    text=text,
+    aspects=['food', 'staff', 'atmosphere'],
+    domain='restaurant'
+)
+
+print(results['summary'])
+print(results['overall']['sentiment'])
+```
+
+### Custom Domain Analysis
+
+```python
+# Initialize with custom modifiers
+custom_modifiers = {
     'restaurant': {
         'delicious': 1.4,
         'expensive': -1.2,
@@ -114,70 +221,57 @@ modifiers = {
     }
 }
 
-analyzer = SRSWTISentimentAnalyzer(
-    custom_domain_modifiers=modifiers
+analyzer = SRSWTISentimentAnalyzer(custom_domain_modifiers=custom_modifiers)
+
+# Add additional modifier
+analyzer.add_domain_modifier('restaurant', 'friendly', 1.3)
+
+# Analyze with custom domain
+results = analyzer.analyze(
+    text="The restaurant was crowded but the staff was friendly.",
+    aspects=['staff', 'atmosphere'],
+    domain='restaurant'
 )
 ```
 
-## performance metrics
+## Sentiment Scoring
 
-### sentiment accuracy
-benchmark scores:
-- overall accuracy: 0.91
-- aspect precision: 0.88
-- domain accuracy: 0.93
-- intensity detection: 0.87
+### Score Ranges
+- Compound: -1.0 to 1.0
+- Positive: 0.0 to 1.0
+- Negative: 0.0 to 1.0
+- Neutral: 0.0 to 1.0
 
-### efficiency
-processing speeds:
-- tokenization: less than 5ms
-- sentiment scoring: less than 20ms
-- aspect analysis: less than 50ms
-- total latency: less than 100ms
+### Sentiment Levels
+```python
+sentiment_level = (
+    'very positive'  # compound > 0.5
+    'positive'      # compound > 0
+    'very negative' # compound < -0.5
+    'negative'      # compound < 0
+    'neutral'       # compound = 0
+)
+```
 
-## practical applications
+## Best Practices
 
-### text analysis
-use cases:
-- customer reviews
-- social media
-- feedback analysis
-- market research
+1. Text Preparation
+   - Clean input text
+   - Proper sentence structure
+   - Consistent formatting
 
-### sentiment detection
-capabilities:
-- emotion tracking
-- opinion mining
-- trend analysis
-- brand monitoring
+2. Aspect Selection
+   - Choose relevant aspects
+   - Use consistent naming
+   - Consider domain context
 
+3. Domain Modifiers
+   - Calibrate modifier values
+   - Test with sample text
+   - Update based on results
 
-## future development
+4. Performance
+   - Process sentences in batches
+   - Cache sentiment scores
+   - Monitor modifier impact
 
-### planned features
-1. enhanced analysis:
-   - emotion detection
-   - sarcasm recognition
-   - context awareness
-   - temporal analysis
-
-2. advanced modifiers:
-   - dynamic learning
-   - context adaption
-   - language variants
-   - cultural nuances, lol
-
-3. optimization features:
-   - batch processing
-   - incremental updates
-   - cached analysis
-   - streaming support
-
-## conclusion
-srswti sentiment analysis system provides comprehensive emotion and opinion analysis through sophisticated algorithms and domain-specific customization. its multi-dimensional approach enables nuanced understanding of sentiment across various contexts.
-
-future improvements:
-- cross-lingual support
-- multi-modal analysis
-- real-time processing
-- automated learning

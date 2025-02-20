@@ -2,7 +2,6 @@
 
 text processing toolkit featuring advanced syntactic understanding, sentiment analysis, and integrated NLP capabilities.
 
-
 ## overview
 the toolkit combines sophisticated grammar parsing with emotional intelligence, complemented by nltk and spacy integrations for comprehensive nlp processing.
 

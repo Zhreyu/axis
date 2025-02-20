@@ -1,31 +1,26 @@
 # Translation
-multi-language translation framework
+a multilingual translation system with support for multiple languages, device optimization, and detailed translation metadata.
 
-## overview
-enables sophisticated language translation through efficient memory management and intelligent model selection.
+## Quick Start
 
-## implementation features
-
-
-### translation pipeline
-core processor:
 ```python
-@dataclass
-class TranslationConfig:
-    device: str = None
-    batch_size: int = 8
-    max_length: int = 512
-    beam_size: int = 4
-    num_hypotheses: int = 1
-    cache_dir: str = "./translation_cache"
+from srswti_axis import SRSWTIMultilingualTranslator
+
+# Initialize translator
+translator = SRSWTIMultilingualTranslator()
+
+# Translate text
+result = translator.translate_text(
+    text="Your text here",
+    src_lang="English",
+    tgt_lang="French"
+)
 ```
 
-### advanced features
+## Supported Languages
 
-#### language support
-supported languages:
 ```python
-LANGUAGE_CODES = {
+SRSWTI_LANGUAGE_CODES = {
     'English': 'en',
     'Spanish': 'es',
     'French': 'fr',
@@ -34,71 +29,186 @@ LANGUAGE_CODES = {
     'Portuguese': 'pt',
     'Russian': 'ru',
     'Chinese': 'zh',
-    'Japanese': 'ja'
-    # ... and more
+    'Japanese': 'ja',
+    'Korean': 'ko',
+    'Arabic': 'ar',
+    'Hindi': 'hi',
+    'Dutch': 'nl',
+    'Polish': 'pl',
+    'Turkish': 'tr'
 }
 ```
 
-## example usage
+## Initialization Options
 
-### basic translation
 ```python
-translator = SRSWTITranslator()
-
-result = translator.translate(
-    text="hello world",
-    source_lang="English",
-    target_lang="Spanish"
+translator = SRSWTIMultilingualTranslator(
+    device=None,  # Auto-selects cuda/mps/cpu
+    config=None   # Optional configuration
 )
 ```
 
-### batch processing
-```python
-config = TranslationConfig(batch_size=4)
-translator = SRSWTITranslator(config)
+Device selection:
+- CUDA if available
+- MPS (Metal Performance Shaders) if available
+- CPU as fallback
 
-results = translator.translate(
-    texts=["text1", "text2", "text3"],
-    source_lang="English",
-    target_lang="French"
+## Translation Features
+
+### Basic Translation
+
+```python
+result = translator.translate_text(
+    text="Text to translate",
+    src_lang="English",
+    tgt_lang="French"
 )
 ```
 
+Returns:
+```python
+{
+    'translation': str,
+    'metadata': {
+        'source_language': str,
+        'target_language': str,
+        'processing_time': float,
+        'model': str,
+        'device': str,
+        'timestamp': str
+    }
+}
+```
 
-## practical applications
+### Error Handling
 
-### content translation
-use cases:
-- document translation
-- chat systems
-- content creation
+```python
+{
+    'translation': None,
+    'error': str  # Error description
+}
+```
 
-## future development
+## Result Display
 
-### planned features
-1. model improvements:
-   - low-latency models
-   - quantization support
-   - streaming translation
-   - adaptive batching
+```python
+from srswti_axis import print_translation_results
 
-2. language support:
-   - more language pairs
-   - dialect handling
-   - code-switching
-   - mixed language, lol
+print_translation_results(result)
+```
 
-3. quality features:
-   - consistency checks
-   - style preservation
-   - terminology control
-   - context awareness
+Output format:
+```
+🌐 SRSWTI Multilingual Translation Results
+==================================================
+• Source Language:   English
+• Target Language:   French
+• Processing Time:   1.2345 seconds
+• Device:           CUDA
+• Timestamp:        2025-02-20 12:34:56
+• Model:            SRSWTI-Multilingual-en-fr
 
-## conclusion
-srswti translation system provides comprehensive language translation through sophisticated model management and efficient processing. its multi-model architecture enables flexible and powerful translation across diverse language pairs.
+Translation:
+--------------------------------------------------
+[Translated text here]
+```
 
-future improvements:
-- zero-shot translation
-- unsupervised learning
-- adaptive preprocessing
-- custom fine-tuning
+## Implementation Examples
+
+### Basic Translation
+
+```python
+translator = SRSWTIMultilingualTranslator()
+
+result = translator.translate_text(
+    text="The rapid advancement of artificial intelligence",
+    src_lang="English",
+    tgt_lang="French"
+)
+```
+
+### Multi-Language Pipeline
+
+```python
+translations = [
+    {
+        "text": "Your text here",
+        "from": "English",
+        "to": "French"
+    },
+    {
+        "text": "Otro texto aquí",
+        "from": "Spanish",
+        "to": "English"
+    }
+]
+
+for translation in translations:
+    result = translator.translate_text(
+        text=translation["text"],
+        src_lang=translation["from"],
+        tgt_lang=translation["to"]
+    )
+    print_translation_results(result)
+```
+
+## Technical Details
+
+### Model Management
+
+```python
+def _get_model_name(self, src_lang: str, tgt_lang: str) -> str:
+    return f"SRSWTI-Multilingual-{src_lang}-{tgt_lang}"
+```
+
+### Model Caching
+
+```python
+def _load_translation_model(self, src_code: str, tgt_code: str):
+    model_key = f"{src_code}-{tgt_code}"
+    if model_key not in self.translators:
+        model_name = f"Helsinki-NLP/opus-mt-{src_code}-{tgt_code}"
+        self.translators[model_key] = pipeline(
+            "translation",
+            model=model_name,
+            device=self.device
+        )
+    return self.translators[model_key]
+```
+
+## Logging System
+
+```python
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] SRSWTI-Multilingual-Translator: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+```
+
+Logging includes:
+- Initialization details
+- Translation errors
+- Model loading events
+- Processing times
+
+
+## Best Practices
+
+1. Language Selection
+   - Use correct language names
+   - Verify language support
+   - Consider language pairs
+
+2. Device Optimization
+   - Consider batch size
+
+3. Error Handling
+   - Check return values
+   - Monitor logs
+   - Handle exceptions
+
+4. Performance
+   - Use model caching
+   - Batch similar translations
+   - Monitor processing times

@@ -2,179 +2,216 @@
 # Summarization
 
 super-fast text summarization framework combining multiple transformer architectures and adaptive chunk processing for sophisticated document summarization.
+# SRSWTI Summarizer
 
-## overview
-enables sophisticated document summarization through hierarchical processing and dynamic model switching.
+A text summarization system with multiple model options and efficient batch processing capabilities.
 
-## theoretical foundations
+## Quick Start
 
-### model hierarchy
-architecture categories:
-```
-models = {
-    lightweight:  <200MB
-    medium:       200MB-500MB
-    large:        500MB-1GB
-    xlarge:       >1GB
-    specialized:  domain-specific
-}
-```
-
-### chunk processing
-sequence handling:
-$C_i = [w_{i-o}, ..., w_i, ..., w_{i+o}]$
-
-where:
-- $C_i$: chunk i
-- $w_i$: words in chunk
-- $o$: overlap size
-- subject to: $len(C_i) \leq max\_tokens$
-
-### summarization scoring
-quality metric:
-$Q_{summary} = \alpha R + \beta C + \gamma L$
-
-where:
-- $R$: relevance score
-- $C$: coherence score
-- $L$: length penalty
-- $\alpha, \beta, \gamma$: weight parameters
-
-## implementation features
-
-### model selection
-configuration system:
 ```python
-@dataclass
-class SRSWTISummaryConfig:
-    model_type: str = "medium"
-    model_name: str = "bart_cnn"
-    device: str = None
-    use_long_model: bool = False
-    long_model_type: str = None
-    document_type: str = None
-```
+from srswti_axis import SRSWTISummarizer
 
-### preprocessing pipeline
-core processor:
-```python
-def _preprocess_text(self, text: str) -> str:
-    """preprocess text for summarization"""
-    return ' '.join(text.split())
-
-def _chunk_long_document(self, text: str) -> List[str]:
-    """split long documents into chunks"""
-    config = LONG_DOCUMENT_CONFIGS[self.config.document_type]
-    chunk_size = config['chunk_size']
-    overlap = config['overlap']
-    # chunking logic...
-    return chunks
-```
-
-### advanced features
-
-#### model variants
-architecture types:
-1. lightweight models:
-   - distilbart: 150mb
-   - mobile-optimized
-   - quick inference
-   - production ready, lol
-
-2. medium models:
-   - t5-base: 220mb
-   - bart-cnn: 400mb
-   - balanced performance
-   - general purpose
-
-3. large models:
-   - t5-large: 800mb
-   - long-t5: 850mb
-   - high quality
-   - complex content
-
-4. specialized models:
-   - pegasus-pubmed
-   - pegasus-arxiv
-   - domain expertise
-   - targeted use-cases
-
-#### chunking strategies
-document configs:
-```python
-LONG_DOCUMENT_CONFIGS = {
-    "book_summary": {
-        "chunk_size": 8192,
-        "overlap": 512,
-        "min_output": 500
-    },
-    "technical_doc": {
-        "chunk_size": 4096,
-        "overlap": 256,
-        "min_output": 300
-    }
-}
-```
-
-## example usage
-
-### basic summarization
-```python
-config = SRSWTISummaryConfig(
-    model_type="lightweight",
-    model_name="srswti_olympus"
+# Initialize summarizer
+summarizer = SRSWTISummarizer(
+    device=None,  # Defaults to GPU if available
+    batch_size=8,
+    use_fp16=False
 )
 
-summarizer = SRSWTISummarizer(config)
-result = summarizer.summarize(text)
-```
-
-### long document handling
-```python
-config = SRSWTISummaryConfig(
-    model_type="large",
-    use_long_model=True,
-    long_model_type="long_t5_tglobal",
-    document_type="book_summary"
+# Single text summarization
+summary = summarizer.summarize_text(
+    text="Your text here",
+    model_key="SRSWTI-LW2",
+    min_length=30,
+    max_length=200
 )
 
-result = summarizer.summarize(long_text)
+# Batch summarization
+summaries = summarizer.summarize_batch(
+    texts=["Text 1", "Text 2"],
+    model_key="SRSWTI-LW2",
+    min_length=30,
+    max_length=200
+)
 ```
 
+## Available Models
 
-## practical applications
+### Lightweight Models (less than 200MB)
 
-### document processing
-use cases:
-- book summaries
-- technical docs
-- research papers
-- patent analysis
-- and yeah pretty much for everthing else too
-## future development
+1. `SRSWTI-LW1`
+   - Size: 60MB
+   - Best for: Quick inference, mobile, low-resource environments
 
-### planned features
-1. model enhancements:
-   - cross-lingual support
-   - streaming processing
+2. `SRSWTI-LW2`
+   - Size: 150MB
+   - Best for: Production, fast processing
 
-2. quality improvements:
-   - coherence checking
-   - factual verification
-   - style preservation
-   - source attribution, lol
+3. `SRSWTI-LW3`
+   - Size: 180MB
+   - Best for: Headlines, short summaries
 
-3. architecture updates:
-   - distillation support
-   - quantization options
-   - model merging
-   - custom training
+### Medium Models (200MB-500MB)
 
-## conclusion
-srswti summarization system provides comprehensive document summarization through sophisticated model selection and intelligent processing. its multi-model architecture enables flexible and powerful summarization across diverse document types.
+1. `SRSWTI-MD1`
+   - Trained on: t5-base
+   - Size: 220MB
+   - Best for: General-purpose, balanced performance
 
-future improvements:
-- multilingual models
-- real-time processing
-- interactive summaries
-- customizable outputs
+2. `SRSWTI-MD2`
+   - Trained on : facebook/bart-large-cnn
+   - Size: 400MB
+   - Best for: News, professional content
+
+3. `SRSWTI-MD3`
+   - Trained on : google/pegasus-cnn_dailymail
+   - Size: 450MB
+   - Best for: News articles, balanced summarization
+
+### Heavy Models (1GB+)
+
+1. `SRSWTI-HV3`
+   - Base Model: google/pegasus-large
+   - Size: 2.2GB
+   - Best for: Highest-quality summaries, advanced NLP tasks
+
+## Core Features
+
+### Initialization Parameters
+
+```python
+summarizer = SRSWTISummarizer(
+    device=None,      # Device ID (None = auto-select)
+    batch_size=8,     # Batch processing size
+    use_fp16=False    # Half-precision inference on GPU
+)
+```
+
+### Single Text Summarization
+
+```python
+summary = summarizer.summarize_text(
+    text="Your text here",
+    model_key="SRSWTI-LW2",  # Model selection
+    min_length=30,           # Minimum summary length
+    max_length=200          # Maximum summary length
+)
+```
+
+### Batch Processing
+
+```python
+summaries = summarizer.summarize_batch(
+    texts=["Text 1", "Text 2"],
+    model_key="SRSWTI-LW2",
+    min_length=30,
+    max_length=200
+)
+```
+
+## Implementation Details
+
+### GPU Optimization
+```python
+# Automatic GPU detection
+device = 0 if torch.cuda.is_available() else -1
+
+# cuDNN benchmark for potential speedup
+if torch.cuda.is_available():
+    torch.backends.cudnn.benchmark = True
+```
+
+### Memory Management
+```python
+# Multiprocessing strategy for semaphore handling
+torch.multiprocessing.set_sharing_strategy('file_system')
+```
+
+### Logging and Metrics
+
+```python
+# Built-in logging
+summarizer.log("Custom message", level="INFO")
+
+# Timing metrics
+summarizer.timing("Operation name", duration)
+```
+
+## Example Usage
+
+### Basic Summarization
+```python
+summarizer = SRSWTISummarizer()
+
+text = """
+The evolution of artificial intelligence and machine learning has transformed 
+numerous industries, reshaping how businesses operate and how we interact 
+with technology.
+"""
+
+summary = summarizer.summarize_text(
+    text=text,
+    model_key="SRSWTI-LW2"
+)
+print(summary)
+```
+
+### Batch Processing
+```python
+batch_texts = [
+    "First article for summarization...",
+    "Second article for summarization...",
+    "Third article for summarization..."
+]
+
+summaries = summarizer.summarize_batch(
+    texts=batch_texts,
+    model_key="SRSWTI-LW2"
+)
+
+for idx, summary in enumerate(summaries, 1):
+    print(f"Summary {idx}: {summary}")
+```
+
+## Performance Considerations
+
+1. Device Selection
+   - Automatic GPU detection
+   - CPU fallback (-1)
+   - Custom device specification
+
+2. FP16 Inference
+   - Enable with `use_fp16=True`
+   - Only effective on GPU
+   - Reduces memory usage
+
+3. Batch Processing
+   - Default batch size: 8
+   - Adjustable based on memory
+   - Efficient for multiple texts
+
+## Error Handling
+
+The implementation includes built-in error handling for:
+- Invalid model configurations
+- Device availability
+- Memory management
+- Model loading issues
+
+
+## Best Practices
+
+1. Model Selection
+   - Use LW2 for speed
+   - Use heavy models for quality
+   - Consider resource constraints
+
+2. Batch Processing
+   - Group similar length texts
+   - Adjust batch size as needed
+   - Monitor memory usage
+
+3. Performance Optimization
+   - Enable FP16 for GPU
+   - Use appropriate batch sizes
+   - Monitor timing metrics

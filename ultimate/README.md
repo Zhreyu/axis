@@ -3,156 +3,183 @@
 search and ranking system integrating neural embeddings, graph-based document relationships, and hybrid scoring for advanced document retrieval.
 
 
-## Overview
-enables sophisticated document retrieval through PageRank-enhanced semantic search and automatic document clustering.
+## Quick Start
 
-## Theoretical Foundations
-
-### Hybrid Ranking Formula
-Combined score computation:
-$Score_{final} = \alpha \cdot PR(d) + (1-\alpha) \cdot Sim(q,d)$
-
-where:
-- $PR(d)$: PageRank score of document d
-- $Sim(q,d)$: semantic similarity between query q and document d
-- $\alpha$: PageRank weight parameter (default: 0.3)
-- subject to: all scores normalized to [0,1]
-
-### Document Graph Structure
-Edge weight calculation:
-$W_{ij} = cos(E_i, E_j)$
-
-where:
-- $E_i$: document embedding vector
-- $E_j$: document embedding vector
-- $cos$: cosine similarity function
-
-## Implementation Features
-
-### Core Components
-1. Document Indexing:
 ```python
-def index_documents(self, documents: List[str]):
-    self.documents = documents
-    self.ranker.build_document_graph(documents)
-```
+from srswti_axis import SRSWTIUltimate
 
-2. Graph Construction:
-```python
-def build_document_graph(self, documents: List[str], threshold: float = 0.5) -> nx.DiGraph:
-    self.doc_embeddings = self.embedder.encode(documents)
-    similarity_matrix = cosine_similarity(self.doc_embeddings)
-    G = nx.DiGraph()
-    
-    # Add edges based on similarity threshold
-    for i in range(len(documents)):
-        for j in range(len(documents)):
-            if i != j and similarity_matrix[i][j] > threshold:
-                G.add_edge(i, j, weight=similarity_matrix[i][j])
-                
-    return G
-```
+# Initialize search engine
+search_engine = SRSWTIUltimate()
 
-### Advanced Features
-
-#### Multi-method Ranking
-Supported approaches:
-1. Combined scoring (weighted sum)
-2. Multiplicative scoring
-3. Pure semantic similarity
-4. PageRank-based importance
-
-#### Document Clustering
-Automatic cluster detection:
-```python
-def get_document_clusters(self) -> Dict[int, List[int]]:
-    return {
-        idx: list(component)
-        for idx, component in enumerate(
-            nx.connected_components(self.document_graph.to_undirected())
-        )
-    }
-```
-
-## Example Usage
-
-### Basic Search
-```python
-engine = SRSWTIUltimate()
-
-# Index documents
-engine.index_documents(documents)
+# Index your documents
+documents = [
+    "Machine learning is a subset of artificial intelligence.",
+    "Deep learning models require significant computational resources."
+]
+search_engine.index_documents(documents)
 
 # Perform search
-results = engine.search(
+results = search_engine.search(
     query="machine learning",
     n_results=5,
     ranking_method='combined'
 )
 ```
 
-### Custom Ranking
+## Core Components
+
+### Search Ranker
+
 ```python
-# Using multiplicative scoring
-results = engine.search(
-    query="neural networks",
-    n_results=3,
-    ranking_method='multiplication'
+from srswti_axis import SRSWTISearchRanker
+
+ranker = SRSWTISearchRanker(
+    embedding_model='srswti-neural-embedder-v1',
+    use_pagerank=True
 )
 ```
 
-## Performance Metrics
+#### Parameters
+- `embedding_model`: Model for semantic embeddings (defaults to 'srswti-neural-embedder-v1')
+- `use_pagerank`: Enable PageRank scoring (defaults to True)
 
-### Search Quality
-Default configuration:
-- Semantic accuracy: 0.88
-- PageRank influence: 0.30
-- Cluster coherence: 0.85
+### Document Graph Building
 
-### Efficiency
-Processing speeds:
-- Document indexing: O(n²)
-- Graph construction: O(n²)
-- Search ranking: O(n log n)
+```python
+graph = ranker.build_document_graph(
+    documents=documents,
+    threshold=0.5
+)
+```
 
-## Practical Applications
+#### Parameters
+- `documents`: List of document strings
+- `threshold`: Similarity threshold for edge creation (default: 0.5)
 
-### Use Cases
-- Academic paper search
-- Technical documentation
-- Content recommendation
-- Topic clustering
-- Document organization
+### Document Ranking
+
+```python
+results = ranker.rank_documents(
+    query="your query",
+    documents=documents,
+    combine_method='weighted_sum',
+    alpha=0.3
+)
+```
+
+#### Parameters
+- `query`: Search query string
+- `documents`: List of documents to rank
+- `combine_method`: Score combination method ('weighted_sum' or 'multiplication')
+- `alpha`: Weight for PageRank score (1-alpha for similarity score)
+
+## Complete Search Engine (SRSWTIUltimate)
+
+### Initialization
+```python
+engine = SRSWTIUltimate()
+```
+
+### Document Indexing
+```python
+engine.index_documents(documents)
+```
+
+### Search Execution
+```python
+results = engine.search(
+    query="your search query",
+    n_results=5,
+    ranking_method='combined'
+)
+```
+
+#### Parameters
+- `query`: Search query string
+- `n_results`: Number of results to return (default: 5)
+- `ranking_method`: Ranking method to use ('combined' or other)
+
+## Result Format
+
+The search results are returned as a list of dictionaries containing:
+```python
+{
+    'document': str,        # The document text
+    'score': float,        # Combined ranking score
+    'pagerank': float,     # PageRank score
+    'cluster': int         # Document cluster ID
+}
+```
+
+## Implementation Examples
+
+### Basic Search Implementation
+```python
+# Initialize search engine
+search_engine = SRSWTIUltimate()
+
+# Sample documents
+documents = [
+    "Machine learning is a subset of artificial intelligence.",
+    "Deep learning models require significant computational resources.",
+    "Natural language processing helps computers understand human language."
+]
+
+# Index documents
+search_engine.index_documents(documents)
+
+# Perform search
+results = search_engine.search(
+    query="machine learning AI",
+    n_results=3
+)
+
+# Process results
+for result in results:
+    print(f"Document: {result['document']}")
+    print(f"Score: {result['score']:.3f}")
+    print(f"PageRank: {result['pagerank']:.3f}")
+    print(f"Cluster: {result['cluster']}\n")
+```
+
+### Document Clustering
+```python
+# Get document clusters
+ranker = SRSWTISearchRanker()
+ranker.build_document_graph(documents)
+clusters = ranker.get_document_clusters()
+
+# Access cluster information
+for cluster_id, doc_indices in clusters.items():
+    print(f"Cluster {cluster_id}: {doc_indices}")
+```
+
+## Memory Management
+
+The implementation includes memory cleanup capabilities:
+```python
+# Clear large model references
+search_engine.ranker.embedder = None
+search_engine.ranker.nlp = None
+```
+
+
+## Model Features
+
+### Document Graph
+- Builds similarity-based document graph
+- Uses cosine similarity for edge weights
+- Implements minimum connectivity guarantee
+- Supports custom similarity thresholds
+
+### Ranking System
+- Combines PageRank and semantic similarity
+- Supports multiple combination methods
+- Provides cluster information
+- Includes document similarity analysis
 
 ### Search Features
-- Semantic understanding
-- Document importance
-- Topic clustering
-- Hybrid ranking
-
-## Future Development
-
-### Planned Features
-1. Dynamic graph updates:
-   - Real-time indexing
-   - Incremental updates
-   - Graph pruning
-
-2. Advanced clustering:
-   - Hierarchical clusters
-   - Topic modeling
-   - Dynamic thresholds
-
-3. Performance optimization:
-   - Sparse graph representation
-   - Cached embeddings
-   - Parallel processing
-
-## Conclusion
-SRSWTI Ultimate provides a sophisticated search and ranking system through its unique combination of semantic understanding, graph-based document relationships, and flexible scoring mechanisms. Its modular architecture enables customizable search experiences across diverse document collections.
-
-Future improvements:
-- Distributed processing
-- Multi-language support
-- Learning-to-rank integration
-- Advanced caching strategies
+- Multi-document indexing
+- Configurable result count
+- Combined ranking scores
+- Cluster identification
