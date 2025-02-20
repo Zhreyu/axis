@@ -20,13 +20,13 @@ For complete documentation, visit [docs.srswti.com](https://docs.srswti.com). Vi
 # Installation
 
 ## Requirements
-- Python 3.9 - 3.11
+- Python 3.10 - 3.11
 
 ## Setting up Virtual Environment
 
 Create a new virtual environment using uv:
 ```bash
-uv venv --python 3.9
+uv venv --python 3.10
 ```
 
 Activate the virtual environment:
