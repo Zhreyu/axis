@@ -243,20 +243,11 @@ The implementation includes error handling for:
 - Processing failures
 - Graph operations
 
-## Dependencies
-
-Required packages:
-- sentence-transformers
-- spacy
-- nltk
-- sklearn
-- networkx
-- numpy
 
 ## Best Practices
 
 1. Document Preparation
-   - Clean text input
+   - Clean text input, use our tect cleaner toolkit
    - Consistent formatting
    - Appropriate grouping
 
